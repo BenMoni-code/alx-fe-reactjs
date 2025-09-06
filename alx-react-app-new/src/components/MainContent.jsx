@@ -1,14 +1,22 @@
 function MainContent() {
   return (
-    <main style={{ backgroundColor: '#e9ecef', padding: '30px', margin: '20px', borderRadius: '8px', textAlign: 'center' }}>
-      <p style={{ fontSize: '1.3rem', color: '#495057', fontWeight: '500', lineHeight: '1.8', margin: '0', fontFamily: 'Arial, sans-serif' }}>
-        I love to visit <span style={{ color: '#dc3545', fontWeight: 'bold' }}>New York</span>, 
-        <span style={{ color: '#6f42c1', fontWeight: 'bold' }}> Paris</span>, and 
-        <span style={{ color: '#fd7e14', fontWeight: 'bold' }}> Tokyo</span>.
+    <main
+      style={{
+        backgroundColor: '#f0f8ff',
+        color: '#333',
+        padding: '40px',
+        textAlign: 'center',
+        fontFamily: 'Arial, sans-serif',
+        borderRadius: '12px',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        margin: '20px',
+      }}
+    >
+      <p style={{ fontSize: '1.2rem', lineHeight: '1.6' }}>
+        I love to visit New York, Paris, and Tokyo.
       </p>
     </main>
   );
 }
 
 export default MainContent;
-
