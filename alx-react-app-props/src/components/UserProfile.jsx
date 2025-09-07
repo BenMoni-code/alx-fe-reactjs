@@ -1,7 +1,24 @@
-import UserInfo from './UserInfo';
+import { useContext } from 'react';
+import UserContext from './UserContext';
 
-function ProfilePage({ userData }) {
-  return <UserInfo userData={userData} />;
+const UserProfile = () => {
+  const userData = useContext(UserContext);
+
+  return (
+    <div
+      style={{
+        border: '1px solid #ccc',
+        padding: '20px',
+        margin: '10px 0',
+        borderRadius: '10px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+        backgroundColor: '#fff',
+      }}
+    >
+      <h2 style={{ color: '#1e90ff', marginBottom: '10px' }}>{userData.name}</h2>
+      <p style={{ margin: '5px 0' }}>
+        Age: <span style={{ fontWeight: 'bold' }}>{userData.age}</span>
+      </p>
+      <p style={{ margin: '5px 0' }}>Bio: {userData.bio}</p>
+    </div>
 }
-
-export default ProfilePage;
