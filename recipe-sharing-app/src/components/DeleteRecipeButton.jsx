@@ -17,4 +17,10 @@ const DeleteRecipeButton = ({ recipeId, onDelete }) => {
   };
 
   return (
-    <button onClick={
+    <button onClick={handleDelete}>
+      Delete Recipe
+    </button>
+  );
+};
+
+export default DeleteRecipeButton;
