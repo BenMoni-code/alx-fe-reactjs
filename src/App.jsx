@@ -1,13 +1,17 @@
+import Search from './components/Search'
 import './App.css'
-import AddRecipeForm from './components/AddRecipeForm'
-import RecipeList from './components/RecipeList'
 
 function App() {
   return (
     <div className="App">
-      <h1>Recipe Sharing Application</h1>
-      <AddRecipeForm />
-      <RecipeList />
+      <header className="App-header">
+        <h1>GitHub User Search</h1>
+        <p>Search for GitHub users and explore their profiles</p>
+      </header>
+      
+      <main className="App-main">
+        <Search />
+      </main>
     </div>
   )
 }
