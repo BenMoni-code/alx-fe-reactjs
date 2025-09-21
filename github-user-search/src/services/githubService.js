@@ -16,6 +16,11 @@ githubAPI.interceptors.request.use((config) => {
 });
 
 export const githubService = {
+  /**
+   * Fetch user data from GitHub API
+   * @param {string} username - GitHub username to search for
+   * @returns {Promise} Promise that resolves to user data
+   */
   async fetchUserData(username) {
     try {
       const response = await githubAPI.get(`/users/${username}`);
@@ -26,6 +31,47 @@ export const githubService = {
         throw new Error('User not found');
       }
       throw new Error(`Failed to fetch user data: ${error.message}`);
+    }
+  },
+
+  async searchUsers(username, options = {}) {
+    try {
+      const { location, minRepos, maxRepos } = options;
+      let query = username;
+      
+      if (location) {
+        query += ` location:${location}`;
+      }
+      
+      if (minRepos) {
+        query += ` repos:>=${minRepos}`;
+      }
+      if (maxRepos) {
+        query += ` repos:<=${maxRepos}`;
+      }
+
+      const response = await githubAPI.get('/search/users', {
+        params: {
+          q: query,
+          sort: 'repositories',
+          order: 'desc'
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw new Error(`Failed to search users: ${error.message}`);
+    }
+  },
+
+  async getUserDetails(username) {
+    try {
+      const response = await githubAPI.get(`/users/${username}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      throw new Error(`Failed to fetch user details: ${error.message}`);
     }
   }
 };

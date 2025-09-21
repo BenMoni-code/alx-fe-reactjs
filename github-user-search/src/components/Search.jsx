@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { githubService } from '../services/githubService';
 
 const Search = () => {
+  // State handling for input value and form submission
   const [searchTerm, setSearchTerm] = useState('');
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -14,9 +15,11 @@ const Search = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Clear previous results and errors
     setError(null);
     setUserData(null);
     
+    // Validate input
     if (!searchTerm.trim()) {
       setError('Please enter a username to search');
       return;
@@ -25,9 +28,11 @@ const Search = () => {
     setLoading(true);
 
     try {
+      // Fetch user data using the fetchUserData function
       const data = await githubService.fetchUserData(searchTerm.trim());
       setUserData(data);
     } catch (err) {
+      // Display error message as specified
       setError('Looks like we cant find the user');
     } finally {
       setLoading(false);
@@ -36,6 +41,7 @@ const Search = () => {
 
   return (
     <div className="search-component">
+      {/* Form with input field for entering GitHub usernames */}
       <form onSubmit={handleSubmit} className="search-form">
         <div className="search-input-container">
           <input
@@ -56,19 +62,23 @@ const Search = () => {
         </div>
       </form>
 
+      {/* Conditional rendering based on API call state */}
       <div className="search-results">
+        {/* Loading state */}
         {loading && (
           <div className="loading-message">
             <p>Loading...</p>
           </div>
         )}
 
+        {/* Error state */}
         {error && (
           <div className="error-message">
             <p>{error}</p>
           </div>
         )}
 
+        {/* Success state - Display user information */}
         {userData && !loading && !error && (
           <div className="user-result">
             <div className="user-avatar">
@@ -103,6 +113,7 @@ const Search = () => {
                 </p>
               )}
               <div className="user-actions">
+                {/* Link to their GitHub profile */}
                 <a 
                   href={userData.html_url} 
                   target="_blank" 
