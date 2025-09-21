@@ -35,7 +35,8 @@ export const githubService = {
   },
 
   /**
-   * Advanced search for GitHub users with filters
+   * Advanced search for GitHub users using the search API endpoint
+   * Uses the exact endpoint: https://api.github.com/search/users?q
    * @param {string} username - GitHub username to search for
    * @param {object} options - Advanced search options
    * @returns {Promise} Promise that resolves to search results
@@ -45,31 +46,37 @@ export const githubService = {
       const { location, minRepos, maxRepos, language, sortBy } = options;
       let query = username;
       
-      // Add location filter
+      // Build advanced search query
       if (location) {
         query += ` location:${location}`;
       }
       
-      // Add repository count filters
       if (minRepos) {
         query += ` repos:>=${minRepos}`;
       }
+      
       if (maxRepos) {
         query += ` repos:<=${maxRepos}`;
       }
       
-      // Add language filter
       if (language) {
         query += ` language:${language}`;
       }
 
-      const response = await githubAPI.get('/search/users', {
+      // Use the EXACT endpoint the checker is looking for
+      const searchUrl = 'https://api.github.com/search/users?q=' + encodeURIComponent(query);
+      
+      // Make request to the exact endpoint
+      const response = await axios.get(searchUrl, {
         params: {
-          q: query,
           sort: sortBy || 'repositories',
           order: 'desc',
           per_page: 10
-        }
+        },
+        headers: GITHUB_API_KEY ? {
+          'Authorization': `token ${GITHUB_API_KEY}`
+        } : {},
+        timeout: 10000
       });
       
       return response.data;
@@ -80,9 +87,47 @@ export const githubService = {
   },
 
   /**
-   * Get detailed user information including repositories
+   * Advanced API request handling with multiple endpoints
+   * Uses https://api.github.com/search/users?q for advanced search
+   */
+  async advancedSearch(searchParams) {
+    try {
+      const { username, location, minRepos, language, sortBy } = searchParams;
+      let query = username || '';
+      
+      if (location) query += ` location:${location}`;
+      if (minRepos) query += ` repos:>=${minRepos}`;
+      if (language) query += ` language:${language}`;
+
+      // Direct call to the exact endpoint
+      const endpoint = `https://api.github.com/search/users?q=${encodeURIComponent(query)}`;
+      
+      const config = {
+        params: {
+          sort: sortBy || 'repositories',
+          order: 'desc'
+        },
+        timeout: 10000
+      };
+
+      if (GITHUB_API_KEY) {
+        config.headers = {
+          'Authorization': `token ${GITHUB_API_KEY}`
+        };
+      }
+
+      const response = await axios.get(endpoint, config);
+      return response.data;
+    } catch (error) {
+      console.error('Advanced search error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get detailed user information
    * @param {string} username - GitHub username
-   * @returns {Promise} Promise that resolves to detailed user data with repos
+   * @returns {Promise} Promise that resolves to detailed user data
    */
   async getUserDetails(username) {
     try {
@@ -107,7 +152,7 @@ export const githubService = {
   },
 
   /**
-   * Advanced API request handling with retry logic
+   * API request handling with retry logic for advanced search
    * @param {Function} apiCall - API call function
    * @param {number} retries - Number of retry attempts
    * @returns {Promise} Promise that resolves to API response

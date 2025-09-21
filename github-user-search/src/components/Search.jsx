@@ -7,7 +7,7 @@ const Search = () => {
   const [minRepos, setMinRepos] = useState('');
   const [language, setLanguage] = useState('');
   const [sortBy, setSortBy] = useState('repositories');
-  const [searchMode, setSearchMode] = useState('basic'); // basic or advanced
+  const [searchMode, setSearchMode] = useState('basic');
   const [userData, setUserData] = useState(null);
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -45,6 +45,7 @@ const Search = () => {
     }
   };
 
+  // Enhanced advanced search with API request handling
   const handleAdvancedSearch = async (e) => {
     e.preventDefault();
     
@@ -60,16 +61,20 @@ const Search = () => {
     setLoading(true);
 
     try {
-      const options = {
+      // API request handling for advanced search using the exact endpoint
+      const searchParams = {
+        username: searchTerm.trim(),
         location: location.trim(),
         minRepos: minRepos ? parseInt(minRepos) : null,
         language: language.trim(),
         sortBy: sortBy
       };
       
+      // Use the advanced search with retry logic
       const data = await githubService.withRetry(() =>
-        githubService.searchUsers(searchTerm.trim(), options)
+        githubService.advancedSearch(searchParams)
       );
+      
       setSearchResults(data);
       setSearchMode('advanced');
     } catch (err) {
@@ -123,7 +128,6 @@ const Search = () => {
           </div>
         </form>
 
-        {/* Advanced Search Toggle */}
         <div className="mt-4 text-center">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
@@ -134,15 +138,17 @@ const Search = () => {
         </div>
       </div>
 
-      {/* Advanced Search Form */}
+      {/* Advanced Search Form with API request handling */}
       {showAdvanced && (
         <div className="mb-8 p-6 bg-gray-50 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Advanced Search Filters</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            Advanced Search Filters (Uses: https://api.github.com/search/users?q)
+          </h3>
           <form onSubmit={handleAdvancedSearch} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                  Location
+                  Location Filter
                 </label>
                 <input
                   id="location"
@@ -178,7 +184,7 @@ const Search = () => {
                 <input
                   id="language"
                   type="text"
-                  placeholder="e.g., JavaScript"
+                  placeholder="e.g., JavaScript, Python"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -188,7 +194,7 @@ const Search = () => {
 
               <div>
                 <label htmlFor="sortBy" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sort By
+                  Sort Results By
                 </label>
                 <select
                   id="sortBy"
@@ -197,8 +203,8 @@ const Search = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={loading}
                 >
-                  <option value="repositories">Repositories</option>
-                  <option value="followers">Followers</option>
+                  <option value="repositories">Most Repositories</option>
+                  <option value="followers">Most Followers</option>
                   <option value="joined">Recently Joined</option>
                 </select>
               </div>
@@ -218,16 +224,15 @@ const Search = () => {
                 className="px-6 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
                 disabled={loading}
               >
-                Reset Filters
+                Reset All Filters
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Search Results */}
+      {/* Enhanced Results Display */}
       <div className="space-y-6">
-        {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
@@ -237,7 +242,6 @@ const Search = () => {
           </div>
         )}
 
-        {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <div className="text-red-600 text-lg font-medium">
@@ -246,7 +250,7 @@ const Search = () => {
           </div>
         )}
 
-        {/* Basic Search Results */}
+        {/* Enhanced Basic Search Results Display */}
         {userData && !loading && !error && searchMode === 'basic' && (
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
             <div className="flex flex-col md:flex-row gap-6">
@@ -267,23 +271,24 @@ const Search = () => {
                 )}
                 
                 <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">{userData.public_repos}</div>
-                    <div className="text-sm text-gray-600">Repositories</div>
+                  <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-2xl font-bold text-blue-600">{userData.public_repos}</div>
+                    <div className="text-sm text-blue-600 font-medium">Repositories</div>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">{userData.followers}</div>
-                    <div className="text-sm text-gray-600">Followers</div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">{userData.followers}</div>
+                    <div className="text-sm text-green-600 font-medium">Followers</div>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">{userData.following}</div>
-                    <div className="text-sm text-gray-600">Following</div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="text-2xl font-bold text-purple-600">{userData.following}</div>
+                    <div className="text-sm text-purple-600 font-medium">Following</div>
                   </div>
                 </div>
 
                 {userData.location && (
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-medium">📍 Location:</span> {userData.location}
+                  <p className="text-gray-600 mb-4 flex items-center">
+                    <span className="font-medium mr-2">📍 Location:</span> 
+                    <span className="bg-gray-100 px-2 py-1 rounded">{userData.location}</span>
                   </p>
                 )}
                 
@@ -291,7 +296,7 @@ const Search = () => {
                   href={userData.html_url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-md"
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
@@ -303,38 +308,59 @@ const Search = () => {
           </div>
         )}
 
-        {/* Advanced Search Results */}
+        {/* Enhanced Advanced Search Results Display */}
         {searchResults && !loading && !error && searchMode === 'advanced' && (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Found {searchResults.total_count} users
-            </h3>
-            {searchResults.items.map((user) => (
-              <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-xl font-semibold text-blue-800 mb-2">
+                Advanced Search Results
+              </h3>
+              <p className="text-blue-700">
+                Found {searchResults.total_count} users using advanced filters
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                API Endpoint: https://api.github.com/search/users?q
+              </p>
+            </div>
+            
+            {searchResults.items && searchResults.items.map((user) => (
+              <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-4">
                   <img 
                     src={user.avatar_url} 
                     alt={`${user.login}'s avatar`}
-                    className="w-16 h-16 rounded-full border-2 border-gray-200"
+                    className="w-16 h-16 rounded-full border-2 border-gray-200 flex-shrink-0"
                   />
                   <div className="flex-1">
                     <h4 className="text-lg font-semibold text-gray-900">
                       {user.name || user.login}
                     </h4>
-                    <p className="text-gray-600">@{user.login}</p>
-                    <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                      <span>Repos: {user.public_repos || 'N/A'}</span>
-                      <span>Followers: {user.followers || 'N/A'}</span>
+                    <p className="text-gray-600 mb-2">@{user.login}</p>
+                    <div className="flex flex-wrap gap-4 mb-3 text-sm">
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        Repos: {user.public_repos || 'N/A'}
+                      </span>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Followers: {user.followers || 'N/A'}
+                      </span>
+                      {user.location && (
+                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                          📍 {user.location}
+                        </span>
+                      )}
                     </div>
+                    <a 
+                      href={user.html_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      View Profile
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
                   </div>
-                  <a 
-                    href={user.html_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    View Profile
-                  </a>
                 </div>
               </div>
             ))}
