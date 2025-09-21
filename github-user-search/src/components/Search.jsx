@@ -16,6 +16,7 @@ const Search = () => {
 
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
+    setError(null);
   };
 
   const handleBasicSearch = async (e) => {
@@ -39,13 +40,12 @@ const Search = () => {
       setUserData(data);
       setSearchMode('basic');
     } catch (err) {
-      setError('Looks like we cant find the user');
+      setError(err.message || 'Looks like we cant find the user');
     } finally {
       setLoading(false);
     }
   };
 
-  // Enhanced advanced search with API request handling
   const handleAdvancedSearch = async (e) => {
     e.preventDefault();
     
@@ -61,7 +61,6 @@ const Search = () => {
     setLoading(true);
 
     try {
-      // API request handling for advanced search using the exact endpoint
       const searchParams = {
         username: searchTerm.trim(),
         location: location.trim(),
@@ -70,7 +69,6 @@ const Search = () => {
         sortBy: sortBy
       };
       
-      // Use the advanced search with retry logic
       const data = await githubService.withRetry(() =>
         githubService.advancedSearch(searchParams)
       );
@@ -78,7 +76,7 @@ const Search = () => {
       setSearchResults(data);
       setSearchMode('advanced');
     } catch (err) {
-      setError('Looks like we cant find the user');
+      setError(err.message || 'Looks like we cant find the user');
     } finally {
       setLoading(false);
     }
@@ -98,7 +96,6 @@ const Search = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      {/* Basic Search Form */}
       <div className="mb-8">
         <form onSubmit={handleBasicSearch} className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -116,7 +113,7 @@ const Search = () => {
               disabled={loading || !searchTerm.trim()}
             >
               {loading ? (
-                <span className="flex items-center">
+                <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -138,11 +135,10 @@ const Search = () => {
         </div>
       </div>
 
-      {/* Advanced Search Form with API request handling */}
       {showAdvanced && (
         <div className="mb-8 p-6 bg-gray-50 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Advanced Search Filters (Uses: https://api.github.com/search/users?q)
+            Advanced Search Filters
           </h3>
           <form onSubmit={handleAdvancedSearch} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -231,7 +227,6 @@ const Search = () => {
         </div>
       )}
 
-      {/* Enhanced Results Display */}
       <div className="space-y-6">
         {loading && (
           <div className="flex justify-center items-center py-12">
@@ -250,7 +245,6 @@ const Search = () => {
           </div>
         )}
 
-        {/* Enhanced Basic Search Results Display */}
         {userData && !loading && !error && searchMode === 'basic' && (
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
             <div className="flex flex-col md:flex-row gap-6">
@@ -259,6 +253,7 @@ const Search = () => {
                   src={userData.avatar_url} 
                   alt={`${userData.login}'s avatar`}
                   className="w-32 h-32 rounded-full border-4 border-gray-200 shadow-md"
+                  loading="lazy"
                 />
               </div>
               <div className="flex-1">
@@ -308,7 +303,6 @@ const Search = () => {
           </div>
         )}
 
-        {/* Enhanced Advanced Search Results Display */}
         {searchResults && !loading && !error && searchMode === 'advanced' && (
           <div className="space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -317,9 +311,6 @@ const Search = () => {
               </h3>
               <p className="text-blue-700">
                 Found {searchResults.total_count} users using advanced filters
-              </p>
-              <p className="text-sm text-blue-600 mt-1">
-                API Endpoint: https://api.github.com/search/users?q
               </p>
             </div>
             
@@ -330,6 +321,7 @@ const Search = () => {
                     src={user.avatar_url} 
                     alt={`${user.login}'s avatar`}
                     className="w-16 h-16 rounded-full border-2 border-gray-200 flex-shrink-0"
+                    loading="lazy"
                   />
                   <div className="flex-1">
                     <h4 className="text-lg font-semibold text-gray-900">
@@ -343,11 +335,6 @@ const Search = () => {
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
                         Followers: {user.followers || 'N/A'}
                       </span>
-                      {user.location && (
-                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                          📍 {user.location}
-                        </span>
-                      )}
                     </div>
                     <a 
                       href={user.html_url} 
