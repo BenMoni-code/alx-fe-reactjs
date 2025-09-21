@@ -34,27 +34,41 @@ export const githubService = {
     }
   },
 
+  /**
+   * Advanced search for GitHub users with filters
+   * @param {string} username - GitHub username to search for
+   * @param {object} options - Advanced search options
+   * @returns {Promise} Promise that resolves to search results
+   */
   async searchUsers(username, options = {}) {
     try {
-      const { location, minRepos, maxRepos } = options;
+      const { location, minRepos, maxRepos, language, sortBy } = options;
       let query = username;
       
+      // Add location filter
       if (location) {
         query += ` location:${location}`;
       }
       
+      // Add repository count filters
       if (minRepos) {
         query += ` repos:>=${minRepos}`;
       }
       if (maxRepos) {
         query += ` repos:<=${maxRepos}`;
       }
+      
+      // Add language filter
+      if (language) {
+        query += ` language:${language}`;
+      }
 
       const response = await githubAPI.get('/search/users', {
         params: {
           q: query,
-          sort: 'repositories',
-          order: 'desc'
+          sort: sortBy || 'repositories',
+          order: 'desc',
+          per_page: 10
         }
       });
       
@@ -65,13 +79,49 @@ export const githubService = {
     }
   },
 
+  /**
+   * Get detailed user information including repositories
+   * @param {string} username - GitHub username
+   * @returns {Promise} Promise that resolves to detailed user data with repos
+   */
   async getUserDetails(username) {
     try {
-      const response = await githubAPI.get(`/users/${username}`);
-      return response.data;
+      const [userResponse, reposResponse] = await Promise.all([
+        githubAPI.get(`/users/${username}`),
+        githubAPI.get(`/users/${username}/repos`, {
+          params: {
+            sort: 'updated',
+            per_page: 5
+          }
+        })
+      ]);
+      
+      return {
+        ...userResponse.data,
+        repositories: reposResponse.data
+      };
     } catch (error) {
       console.error('Error fetching user details:', error);
       throw new Error(`Failed to fetch user details: ${error.message}`);
+    }
+  },
+
+  /**
+   * Advanced API request handling with retry logic
+   * @param {Function} apiCall - API call function
+   * @param {number} retries - Number of retry attempts
+   * @returns {Promise} Promise that resolves to API response
+   */
+  async withRetry(apiCall, retries = 3) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (retries > 0 && error.response?.status >= 500) {
+        console.log(`Retrying API call... ${retries} attempts left`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.withRetry(apiCall, retries - 1);
+      }
+      throw error;
     }
   }
 };
